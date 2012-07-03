@@ -26,6 +26,7 @@ org.eclipse.m2e.core.prefs
 !etc/org.eclipse.jdt.core.prefs
 org.maven.ide.eclipse.prefs
 .classpath
+.project
 /bin
 tests/*-tests/hs_err_pid*.log
 tests/**/server.lock
