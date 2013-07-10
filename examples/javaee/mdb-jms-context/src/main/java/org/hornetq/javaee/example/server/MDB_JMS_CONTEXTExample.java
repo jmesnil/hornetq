@@ -19,10 +19,14 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.ejb.TransactionManagement;
 import javax.ejb.TransactionManagementType;
+import javax.inject.Inject;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageListener;
+import javax.jms.Queue;
 import javax.jms.TextMessage;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
 import javax.transaction.SystemException;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
@@ -39,8 +43,14 @@ import java.util.Calendar;
                                                                        @ActivationConfigProperty(propertyName = "consumerMaxRate", propertyValue = "1")})
 @TransactionManagement(value = TransactionManagementType.CONTAINER)
 @TransactionAttribute(value = TransactionAttributeType.REQUIRED)
-public class MDB_CMT_TxRequiredExample implements MessageListener
+public class MDB_JMS_CONTEXTExample implements MessageListener
 {
+
+   @Inject
+   javax.jms.JMSContext context;
+
+   @Resource(mappedName = "java:/queue/replyQueue")
+   Queue replyQueue;
 
    public void onMessage(final Message message)
    {
@@ -52,14 +62,18 @@ public class MDB_CMT_TxRequiredExample implements MessageListener
          // Step 10. get the text from the message.
          String text = textMessage.getText();
 
-         Calendar c =Calendar.getInstance();
+         InitialContext initialContext = new InitialContext();
 
-         System.out.println("message " + text + " received at " + c.getTime());
+         context.createProducer().send(replyQueue, "this is a reply");
 
       }
       catch (JMSException e)
       {
          e.printStackTrace();
+      }
+      catch (NamingException e)
+      {
+         e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
       }
    }
 }
