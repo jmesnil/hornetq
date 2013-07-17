@@ -28,6 +28,7 @@ import org.jboss.arquillian.container.test.api.RunAsClient;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.Archive;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
+import org.jboss.shrinkwrap.api.asset.EmptyAsset;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -43,20 +44,16 @@ public class MDBCMTSetTXRequiredRunnerTest
    @Deployment
    public static Archive getDeployment()
    {
-
-      final JavaArchive ejbJar = ShrinkWrap.create(JavaArchive.class, "mdb.jar");
-      ejbJar.addClass(MDB_JMS_CONTEXTExample.class);
-      System.out.println(ejbJar.toString(true));
-      return ejbJar;
+      final JavaArchive archive = ShrinkWrap.create(JavaArchive.class, "mdb.jar")
+            .addClass(MDB_JMS_CONTEXTExample.class)
+            .addAsManifestResource(EmptyAsset.INSTANCE, "beans.xml");
+      System.out.println(archive.toString(true));
+      return archive;
    }
 
    @Test
    public void runExample() throws Exception
    {
       MDBJMSContextClientExample.main(null);
-      //give the example time to run
-      Thread.sleep(10000);
    }
-
-
 }

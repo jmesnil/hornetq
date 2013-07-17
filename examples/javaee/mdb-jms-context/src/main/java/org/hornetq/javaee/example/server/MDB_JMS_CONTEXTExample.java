@@ -12,68 +12,58 @@
  */
 package org.hornetq.javaee.example.server;
 
-import javax.annotation.Resource;
+import static javax.ejb.TransactionAttributeType.REQUIRED;
+import static javax.ejb.TransactionManagementType.CONTAINER;
+
 import javax.ejb.ActivationConfigProperty;
 import javax.ejb.MessageDriven;
 import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
 import javax.ejb.TransactionManagement;
-import javax.ejb.TransactionManagementType;
 import javax.inject.Inject;
+import javax.jms.JMSContext;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageListener;
-import javax.jms.Queue;
 import javax.jms.TextMessage;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
-import javax.transaction.SystemException;
-import javax.transaction.Transaction;
-import javax.transaction.TransactionManager;
-
-import org.jboss.ejb3.annotation.ResourceAdapter;
-
-import java.util.Calendar;
 
 /**
  * @author <a href="mailto:andy.taylor@jboss.org">Andy Taylor</a>
  */
-@MessageDriven(name = "MDB_JMS_CONTEXT", activationConfig = { @ActivationConfigProperty(propertyName = "destinationType", propertyValue = "javax.jms.Queue"),
-                                                                       @ActivationConfigProperty(propertyName = "destination", propertyValue = "queue/testQueue"),
-                                                                       @ActivationConfigProperty(propertyName = "consumerMaxRate", propertyValue = "1")})
-@TransactionManagement(value = TransactionManagementType.CONTAINER)
-@TransactionAttribute(value = TransactionAttributeType.REQUIRED)
+@MessageDriven(
+        name = "MDB_JMS_CONTEXT",
+        activationConfig = {
+                @ActivationConfigProperty(propertyName = "destinationType", propertyValue = "javax.jms.Queue"),
+                @ActivationConfigProperty(propertyName = "destinationLookup", propertyValue = "queue/testQueue")
+        }
+)
+@TransactionManagement(value = CONTAINER)
+@TransactionAttribute(value = REQUIRED)
 public class MDB_JMS_CONTEXTExample implements MessageListener
 {
 
    @Inject
-   javax.jms.JMSContext context;
-
-   @Resource(mappedName = "java:/queue/replyQueue")
-   Queue replyQueue;
+   JMSContext context;
 
    public void onMessage(final Message message)
    {
       try
       {
-         // Step 9. We know the client is sending a text message so we cast
+         // Step 7. We know the client is sending a text message so we cast
          TextMessage textMessage = (TextMessage)message;
 
-         // Step 10. get the text from the message.
+         // Step 8. get the text from the message.
          String text = textMessage.getText();
 
-         InitialContext initialContext = new InitialContext();
-
-         context.createProducer().send(replyQueue, "this is a reply");
+         System.out.println("Received message: " + text);
+         // Step 9. send a reply to the message
+         context.createProducer()
+                 .setJMSCorrelationID(message.getJMSMessageID())
+                 .send(textMessage.getJMSReplyTo(), "this is a reply to " + text);
 
       }
       catch (JMSException e)
       {
          e.printStackTrace();
-      }
-      catch (NamingException e)
-      {
-         e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
       }
    }
 }
